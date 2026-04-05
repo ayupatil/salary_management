@@ -35,4 +35,24 @@ class EmployeeTest < ActiveSupport::TestCase
     employee = build_employee(salary: nil)
     assert_not employee.valid?
   end
+
+  test "salary should be greater than 0" do
+    employee = build_employee(salary: 0)
+    assert_not employee.valid?
+  end
+
+  test "salary should be numeric" do
+    employee = build_employee(salary: "abc")
+    assert_not employee.valid?
+  end
+
+  test "full_name should not be blank" do
+    employee = build_employee(full_name: "")
+    assert_not employee.valid?
+  end
+
+  test "full_name should be atleast 2 chars long" do
+    employee = build_employee(full_name: "a")
+    assert_not employee.valid?
+  end
 end
