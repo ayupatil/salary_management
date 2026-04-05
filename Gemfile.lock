@@ -174,6 +174,8 @@ GEM
       racc (~> 1.4)
     ostruct (0.6.3)
     parallel (1.28.0)
+    paranoia (3.1.0)
+      activerecord (>= 7, < 8.2)
     parser (3.3.11.1)
       ast (~> 2.4.1)
       racc
@@ -335,6 +337,7 @@ DEPENDENCIES
   brakeman
   debug
   kamal
+  paranoia
   puma (>= 5.0)
   rails (~> 8.0.2)
   rubocop-rails-omakase
