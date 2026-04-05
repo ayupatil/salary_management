@@ -29,3 +29,8 @@
 
 en:
   hello: "Hello world"
+  error:
+    required: "%{field} is required."
+
+  field:
+    country: "Country"

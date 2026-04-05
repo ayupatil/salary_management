@@ -93,4 +93,14 @@ class EmployeesControllerTest < ActionDispatch::IntegrationTest
 
     assert_equal 200.0, json["avg_salary"]
   end
+
+  test "should return error when country param is missing" do
+    get "/employees/insights"
+
+    assert_response :bad_request
+
+    json = JSON.parse(response.body)
+    expected_msg = I18n.t("error.required", field: I18n.t("field.country"))
+    assert_equal expected_msg, json["error"]
+  end
 end

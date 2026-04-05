@@ -36,6 +36,20 @@ class EmployeesController < ApplicationController
     head :no_content
   end
 
+  def insights
+    if params[:country].blank?
+      return render json: { error: I18n.t("error.required", field: I18n.t("field.country")) },
+                    status: :bad_request
+    end
+
+    result = SalaryInsightsService.new(
+      country: params[:country],
+      job_title: params[:job_title]
+    ).call
+
+    render json: result
+  end
+
   private
 
   def employee_params
