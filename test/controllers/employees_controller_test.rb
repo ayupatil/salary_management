@@ -60,4 +60,37 @@ class EmployeesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :no_content
   end
+
+  test "should return salary insights for a country" do
+    Employee.create!(build_params(country: "India", salary: 100))
+    Employee.create!(build_params(country: "India", salary: 200))
+
+    get "/employees/insights", params: { country: "India" }
+
+    assert_response :success
+
+    json = JSON.parse(response.body)
+
+    assert_equal 100, json["min_salary"]
+    assert_equal 200, json["max_salary"]
+    assert_equal 150.0, json["avg_salary"]
+    assert_equal 2, json["total_employees"]
+  end
+
+  test "should return avg salary for job title in a country" do
+    Employee.create!(build_params(country: "India", job_title: "Engineer", salary: 100))
+    Employee.create!(build_params(country: "India", job_title: "Engineer", salary: 300))
+    Employee.create!(build_params(country: "India", job_title: "Manager", salary: 500))
+
+    get "/employees/insights", params: {
+      country: "India",
+      job_title: "Engineer"
+    }
+
+    assert_response :success
+
+    json = JSON.parse(response.body)
+
+    assert_equal 200.0, json["avg_salary"]
+  end
 end
