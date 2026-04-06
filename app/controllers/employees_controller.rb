@@ -1,8 +1,14 @@
 class EmployeesController < ApplicationController
   def index
     page = params[:page] || 1
-    per_page = [ params[:per_page]&.to_i || 50 ].min # Cap at 100
-    employees = Employee.page(page).per(per_page)
+    per_page = [ params[:per_page]&.to_i || 50 ].min
+
+    employees = Employee.all
+    employees = employees.where(country: params[:country]) if params[:country].present?
+    employees = employees.where(job_title: params[:job_title]) if params[:job_title].present?
+    employees = employees.where("full_name LIKE ?", "%#{params[:search]}%") if params[:search].present?
+
+    employees = employees.page(page).per(per_page)
 
     render json: {
       employees: employees,
