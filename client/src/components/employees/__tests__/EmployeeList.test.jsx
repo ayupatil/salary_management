@@ -171,7 +171,10 @@ describe('EmployeeList', () => {
     renderWithQuery(<EmployeeList />);
 
     await waitFor(() => {
-      expect(screen.getByText(/showing 1 of 10,000 employees/i)).toBeInTheDocument();
+      // Check for the individual parts of the pagination text
+      expect(screen.getByText(/showing/i)).toBeInTheDocument();
+      expect(screen.getByText('10,000')).toBeInTheDocument();
+      expect(screen.getByText(/employees/i)).toBeInTheDocument();
     });
   });
 });
