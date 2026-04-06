@@ -1,15 +1,7 @@
 require "test_helper"
 
 class EmployeeTest < ActiveSupport::TestCase
-  def build_employee(overrides = {})
-    Employee.new(
-      full_name: "John Doe",
-      job_title: "Engineer",
-      country: "India",
-      salary: 50000,
-      **overrides
-    )
-  end
+  include EmployeeTestHelper
 
   test "is valid with all required attributes" do
     employee = build_employee
