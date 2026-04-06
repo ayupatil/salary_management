@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { employeeService } from '@/services/employeeService';
 import {
@@ -12,9 +13,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 function EmployeeList() {
+  const [currentPage, setCurrentPage] = useState(1);
+  const perPage = 50;
+
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ['employees', { page: 1, perPage: 50 }],
-    queryFn: () => employeeService.getEmployees({ page: 1, perPage: 50 }),
+    queryKey: ['employees', { page: currentPage, perPage }],
+    queryFn: () => employeeService.getEmployees({ page: currentPage, perPage }),
   });
 
   // Loading state
@@ -117,6 +121,30 @@ function EmployeeList() {
             </TableBody>
           </Table>
         </div>
+      </div>
+
+      {/* Pagination Controls */}
+      <div className="flex items-center justify-between bg-white border border-gray-200 rounded-lg px-4 py-3">
+        <button
+          onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+          disabled={pagination.current_page === 1}
+          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          Previous
+        </button>
+
+        <div className="text-sm text-gray-700">
+          Page <span className="font-semibold">{pagination.current_page}</span> of{' '}
+          <span className="font-semibold">{pagination.total_pages}</span>
+        </div>
+
+        <button
+          onClick={() => setCurrentPage((prev) => prev + 1)}
+          disabled={pagination.current_page === pagination.total_pages}
+          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          Next
+        </button>
       </div>
     </div>
   );
