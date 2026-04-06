@@ -1,7 +1,18 @@
 class EmployeesController < ApplicationController
   def index
-    employees = Employee.all
-    render json: employees
+    page = params[:page] || 1
+    per_page = [ params[:per_page]&.to_i || 50 ].min # Cap at 100
+    employees = Employee.page(page).per(per_page)
+
+    render json: {
+      employees: employees,
+      pagination: {
+        current_page: employees.current_page,
+        total_pages: employees.total_pages,
+        total_count: employees.total_count,
+        per_page: per_page
+      }
+    }
   end
 
   def show
