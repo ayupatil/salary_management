@@ -1,15 +1,19 @@
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import Layout from './components/layout/Layout';
+import EmployeesPage from './pages/EmployeesPage';
+import InsightsPage from './pages/InsightsPage';
+
 function App() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-gray-900">
-          Salary Management System
-        </h1>
-        <p className="mt-2 text-gray-600">
-          HR Dashboard for managing employee data and insights
-        </p>
-      </div>
-    </div>
+    <Router>
+      <Layout>
+        <Routes>
+          <Route path="/" element={<Navigate to="/employees" replace />} />
+          <Route path="/employees" element={<EmployeesPage />} />
+          <Route path="/insights" element={<InsightsPage />} />
+        </Routes>
+      </Layout>
+    </Router>
   );
 }
 
