@@ -1,7 +1,7 @@
 class EmployeesController < ApplicationController
   def index
     page = params[:page] || 1
-    per_page = [ params[:per_page]&.to_i || 50 ].min
+    per_page = [ params[:per_page]&.to_i || 50, 100 ].min
 
     employees = Employee.all
     employees = employees.where(country: params[:country]) if params[:country].present?
