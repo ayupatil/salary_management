@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import EmployeeList from '../EmployeeList';
 import { employeeService } from '@/services/employeeService';
@@ -175,6 +176,155 @@ describe('EmployeeList', () => {
       expect(screen.getByText(/showing/i)).toBeInTheDocument();
       expect(screen.getByText('10,000')).toBeInTheDocument();
       expect(screen.getByText(/employees/i)).toBeInTheDocument();
+    });
+  });
+
+  it('should render pagination controls with Previous and Next buttons', async () => {
+    const mockData = {
+      employees: [
+        {
+          id: 1,
+          full_name: 'John Doe',
+          job_title: 'Engineer',
+          country: 'India',
+          salary: 75000,
+        },
+      ],
+      pagination: {
+        current_page: 2,
+        total_pages: 5,
+        total_count: 250,
+        per_page: 50,
+      },
+    };
+
+    employeeService.getEmployees.mockResolvedValue(mockData);
+
+    renderWithQuery(<EmployeeList />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /previous/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /next/i })).toBeInTheDocument();
+      expect(screen.getByText(/page/i)).toBeInTheDocument();
+      expect(screen.getByText('2')).toBeInTheDocument();
+      expect(screen.getByText('5')).toBeInTheDocument();
+    });
+  });
+
+  it('should disable Previous button on first page', async () => {
+    const mockData = {
+      employees: [
+        {
+          id: 1,
+          full_name: 'John Doe',
+          job_title: 'Engineer',
+          country: 'India',
+          salary: 75000,
+        },
+      ],
+      pagination: {
+        current_page: 1,
+        total_pages: 5,
+        total_count: 250,
+        per_page: 50,
+      },
+    };
+
+    employeeService.getEmployees.mockResolvedValue(mockData);
+
+    renderWithQuery(<EmployeeList />);
+
+    await waitFor(() => {
+      const previousButton = screen.getByRole('button', { name: /previous/i });
+      expect(previousButton).toBeDisabled();
+      expect(screen.getByRole('button', { name: /next/i })).not.toBeDisabled();
+    });
+  });
+
+  it('should disable Next button on last page', async () => {
+    const mockData = {
+      employees: [
+        {
+          id: 1,
+          full_name: 'John Doe',
+          job_title: 'Engineer',
+          country: 'India',
+          salary: 75000,
+        },
+      ],
+      pagination: {
+        current_page: 5,
+        total_pages: 5,
+        total_count: 250,
+        per_page: 50,
+      },
+    };
+
+    employeeService.getEmployees.mockResolvedValue(mockData);
+
+    renderWithQuery(<EmployeeList />);
+
+    await waitFor(() => {
+      const nextButton = screen.getByRole('button', { name: /next/i });
+      expect(nextButton).toBeDisabled();
+      expect(screen.getByRole('button', { name: /previous/i })).not.toBeDisabled();
+    });
+  });
+
+  it('should fetch next page when Next button is clicked', async () => {
+    const user = userEvent.setup();
+    const mockDataPage1 = {
+      employees: [
+        {
+          id: 1,
+          full_name: 'John Doe',
+          job_title: 'Engineer',
+          country: 'India',
+          salary: 75000,
+        },
+      ],
+      pagination: {
+        current_page: 1,
+        total_pages: 2,
+        total_count: 100,
+        per_page: 50,
+      },
+    };
+
+    const mockDataPage2 = {
+      employees: [
+        {
+          id: 2,
+          full_name: 'Jane Smith',
+          job_title: 'Manager',
+          country: 'USA',
+          salary: 95000,
+        },
+      ],
+      pagination: {
+        current_page: 2,
+        total_pages: 2,
+        total_count: 100,
+        per_page: 50,
+      },
+    };
+
+    employeeService.getEmployees.mockResolvedValueOnce(mockDataPage1);
+
+    renderWithQuery(<EmployeeList />);
+
+    await waitFor(() => {
+      expect(screen.getByText('John Doe')).toBeInTheDocument();
+    });
+
+    employeeService.getEmployees.mockResolvedValueOnce(mockDataPage2);
+
+    const nextButton = screen.getByRole('button', { name: /next/i });
+    await user.click(nextButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('Jane Smith')).toBeInTheDocument();
+      expect(employeeService.getEmployees).toHaveBeenCalledWith({ page: 2, perPage: 50 });
     });
   });
 });
