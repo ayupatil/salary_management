@@ -132,4 +132,76 @@ class EmployeesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 5, json["employees"].length
     assert_equal 2, json["pagination"]["current_page"]
   end
+
+  test "should filter employees by country" do
+    create_employee(full_name: "John India", country: "India")
+    create_employee(full_name: "Jane USA", country: "USA")
+    create_employee(full_name: "Bob India", country: "India")
+
+    get "/employees", params: { country: "India" }
+    assert_response :success
+    json = JSON.parse(response.body)
+
+    assert_equal 2, json["employees"].length
+    assert_equal 2, json["pagination"]["total_count"]
+    json["employees"].each do |emp|
+      assert_equal "India", emp["country"]
+    end
+  end
+
+  test "should filter employees by job_title" do
+    create_employee(full_name: "John Engineer", job_title: "Engineer")
+    create_employee(full_name: "Jane Manager", job_title: "Manager")
+    create_employee(full_name: "Bob Engineer", job_title: "Engineer")
+
+    get "/employees", params: { job_title: "Engineer" }
+    assert_response :success
+    json = JSON.parse(response.body)
+
+    assert_equal 2, json["employees"].length
+    json["employees"].each do |emp|
+      assert_equal "Engineer", emp["job_title"]
+    end
+  end
+
+  test "should filter employees by both country and job_title" do
+    create_employee(full_name: "John", country: "India", job_title: "Engineer")
+    create_employee(full_name: "Jane", country: "USA", job_title: "Engineer")
+    create_employee(full_name: "Bob", country: "India", job_title: "Manager")
+
+    get "/employees", params: { country: "India", job_title: "Engineer" }
+    assert_response :success
+    json = JSON.parse(response.body)
+
+    assert_equal 1, json["employees"].length
+    assert_equal "John", json["employees"][0]["full_name"]
+  end
+
+  test "should search employees by name" do
+    create_employee(full_name: "John Doe")
+    create_employee(full_name: "Jane Smith")
+    create_employee(full_name: "Johnny Walker")
+
+    get "/employees", params: { search: "John" }
+    assert_response :success
+    json = JSON.parse(response.body)
+
+    assert_equal 2, json["employees"].length
+    json["employees"].each do |emp|
+      assert_match(/John/i, emp["full_name"])
+    end
+  end
+
+  test "should combine search with filters" do
+    create_employee(full_name: "John Doe", country: "India")
+    create_employee(full_name: "John Smith", country: "USA")
+    create_employee(full_name: "Jane Doe", country: "India")
+
+    get "/employees", params: { search: "John", country: "India" }
+    assert_response :success
+    json = JSON.parse(response.body)
+
+    assert_equal 1, json["employees"].length
+    assert_equal "John Doe", json["employees"][0]["full_name"]
+  end
 end
