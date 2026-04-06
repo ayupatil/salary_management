@@ -80,7 +80,10 @@ class EmployeesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     json = JSON.parse(response.body)
 
+    assert_equal 100, json["min_salary"]
+    assert_equal 300, json["max_salary"]
     assert_equal 200.0, json["avg_salary"]
+    assert_equal 2, json["total_employees"]
   end
 
   test "should return error when country param is missing" do
