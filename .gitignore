@@ -34,3 +34,9 @@
 # Ignore master key for decrypting credentials and more.
 /config/master.key
 .DS_Store
+
+# Frontend (client) specific
+/client/node_modules
+/client/dist
+/client/.env.local
+/client/.env.production.local
