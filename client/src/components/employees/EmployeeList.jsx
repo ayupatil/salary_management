@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import { employeeService } from '@/services/employeeService';
 import {
@@ -18,11 +18,21 @@ import { Button } from '@/components/ui/button';
 import { Pagination } from '@/components/ui/pagination';
 import { EmptyState } from '@/components/ui/empty-state';
 import CreateEmployeeModal from './CreateEmployeeModal';
+import EditEmployeeModal from './EditEmployeeModal';
+import DeleteConfirmationModal from './DeleteConfirmationModal';
 import { COUNTRY_OPTIONS, JOB_TITLE_OPTIONS, ITEMS_PER_PAGE } from '@/utils/constants';
 import { formatCurrency, formatNumber } from '@/utils/formatters';
 
 function EmployeeList() {
   const [searchParams, setSearchParams] = useSearchParams();
+  
+  // Edit modal state
+  const [editingEmployee, setEditingEmployee] = useState(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  
+  // Delete modal state
+  const [deletingEmployee, setDeletingEmployee] = useState(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   
   // Initialize state from URL params
   const [currentPage, setCurrentPage] = useState(
@@ -75,6 +85,18 @@ function EmployeeList() {
     setJobTitle('');
   };
 
+  // Handle edit employee
+  const handleEditEmployee = (employee) => {
+    setEditingEmployee(employee);
+    setIsEditModalOpen(true);
+  };
+
+  // Handle delete employee
+  const handleDeleteEmployee = (employee) => {
+    setDeletingEmployee(employee);
+    setIsDeleteModalOpen(true);
+  };
+
   // Build query parameters
   const queryParams = {
     page: currentPage,
@@ -84,9 +106,10 @@ function EmployeeList() {
     ...(searchTerm && { search: searchTerm }),
   };
 
-  const { data, isLoading, isError, error } = useQuery({
+  const { data, isLoading, isError, error, isPlaceholderData } = useQuery({
     queryKey: ['employees', queryParams],
     queryFn: () => employeeService.getEmployees(queryParams),
+    placeholderData: keepPreviousData, // Keep previous page data while fetching new page
   });
 
   const employees = data?.employees || [];
@@ -241,7 +264,16 @@ function EmployeeList() {
               description="Try adjusting your filters or search criteria"
             />
           ) : (
-            <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+            <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden relative">
+              {/* Loading overlay when using placeholder data */}
+              {isPlaceholderData && (
+                <div className="absolute inset-0 bg-white bg-opacity-60 z-10 flex items-center justify-center">
+                  <div className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg text-sm font-medium">
+                    Loading new data...
+                  </div>
+                </div>
+              )}
+              
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
@@ -261,12 +293,19 @@ function EmployeeList() {
                         <TableCell className="text-gray-700">{employee.country}</TableCell>
                         <TableCell className="text-gray-700 font-semibold text-right">{formatCurrency(employee.salary)}</TableCell>
                         <TableCell>
-                          {/* Action buttons will be added later */}
                           <div className="flex gap-3 justify-center">
-                            <button className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors">
+                            <button 
+                              onClick={() => handleEditEmployee(employee)}
+                              className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
+                              aria-label={`Edit ${employee.full_name}`}
+                            >
                               Edit
                             </button>
-                            <button className="text-red-600 hover:text-red-800 text-sm font-medium transition-colors">
+                            <button 
+                              onClick={() => handleDeleteEmployee(employee)}
+                              className="text-red-600 hover:text-red-800 text-sm font-medium transition-colors"
+                              aria-label={`Delete ${employee.full_name}`}
+                            >
                               Delete
                             </button>
                           </div>
@@ -288,6 +327,24 @@ function EmployeeList() {
             />
           )}
         </>
+      )}
+
+      {/* Edit Employee Modal */}
+      {editingEmployee && (
+        <EditEmployeeModal
+          employee={editingEmployee}
+          open={isEditModalOpen}
+          onOpenChange={setIsEditModalOpen}
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deletingEmployee && (
+        <DeleteConfirmationModal
+          employee={deletingEmployee}
+          open={isDeleteModalOpen}
+          onOpenChange={setIsDeleteModalOpen}
+        />
       )}
     </div>
   );

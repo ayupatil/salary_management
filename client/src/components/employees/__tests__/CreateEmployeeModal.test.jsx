@@ -256,9 +256,23 @@ describe('CreateEmployeeModal', () => {
     await user.type(screen.getByLabelText(/full name/i), 'John Doe');
     await user.type(screen.getByLabelText(/salary/i), '75000');
 
-    // Close dialog
+    // Close dialog (this will show confirmation since form is dirty)
     const cancelButton = screen.getByRole('button', { name: /cancel/i });
     await user.click(cancelButton);
+
+    // Confirmation dialog should appear
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /discard changes/i })).toBeInTheDocument();
+    });
+
+    // Click "Discard Changes" button to confirm
+    const discardButton = screen.getByRole('button', { name: /^discard changes$/i });
+    await user.click(discardButton);
+
+    // Wait for modal to close
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
 
     // Reopen dialog
     await user.click(screen.getByRole('button', { name: /add employee/i }));

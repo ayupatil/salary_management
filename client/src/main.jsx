@@ -4,13 +4,15 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import './index.css';
 import App from './App.jsx';
 
-// Create a client
+// Create a client with optimized caching strategy
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 1,
       refetchOnWindowFocus: false,
-      staleTime: 30000, // 30 seconds
+      staleTime: 5 * 60 * 1000, // 5 minutes - data stays fresh (no refetch)
+      gcTime: 10 * 60 * 1000, // 10 minutes - garbage collection time (cache persists)
+      // Note: Use placeholderData: keepPreviousData in individual queries for better UX
     },
   },
 });

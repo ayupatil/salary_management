@@ -1,5 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect } from 'react';
 import { TextField } from '@/components/ui/text-field';
 import { Dropdown } from '@/components/ui/dropdown';
 import { Button } from '@/components/ui/button';
@@ -17,15 +18,23 @@ function EmployeeForm({
   onCancel,
   isSubmitting = false,
   submitButtonText = 'Submit',
+  onFormChange,
 }) {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm({
     resolver: zodResolver(employeeSchema),
     defaultValues,
   });
+
+  // Notify parent about form changes
+  useEffect(() => {
+    if (onFormChange) {
+      onFormChange(isDirty);
+    }
+  }, [isDirty, onFormChange]);
 
   // Filter out "All..." options for forms (not needed in create/edit)
   const jobTitleOptions = JOB_TITLE_OPTIONS.filter((opt) => opt.value !== '');

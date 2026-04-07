@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { employeeService } from '@/services/employeeService';
 import {
@@ -7,55 +7,53 @@ import {
   ModalDescription,
   ModalHeader,
   ModalTitle,
-  ModalTrigger,
 } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/toast';
 import { invalidateAllEmployeeData } from '@/utils/cache';
 import EmployeeForm from './EmployeeForm';
 
-function CreateEmployeeModal() {
-  const [open, setOpen] = useState(false);
+function EditEmployeeModal({ employee, open, onOpenChange }) {
   const [isDirty, setIsDirty] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const queryClient = useQueryClient();
   const { addToast } = useToast();
 
   const mutation = useMutation({
-    mutationFn: employeeService.createEmployee,
+    mutationFn: employeeService.updateEmployee,
     onSuccess: () => {
       // Show success toast
-      addToast('Employee created successfully!', 'success');
+      addToast('Employee updated successfully!', 'success');
       
-      // Invalidate all employee-related caches (employees list + insights)
+      // Invalidate all employee-related caches
       invalidateAllEmployeeData(queryClient);
       
-      // Close modal immediately without confirmation
+      // Close modal without confirmation
       setIsDirty(false);
-      setOpen(false);
+      onOpenChange(false);
     },
     onError: (error) => {
       // Show error toast
-      addToast(error.message || 'Failed to create employee', 'error');
+      addToast(error.message || 'Failed to update employee', 'error');
     },
   });
 
   const handleSubmit = (data) => {
-    mutation.mutate(data);
+    mutation.mutate({ id: employee.id, ...data });
   };
 
   const handleCancel = () => {
     if (isDirty) {
       setShowConfirmation(true);
     } else {
-      setOpen(false);
+      onOpenChange(false);
     }
   };
 
   const handleConfirmClose = () => {
     setShowConfirmation(false);
     setIsDirty(false);
-    setOpen(false);
+    onOpenChange(false);
   };
 
   const handleCancelClose = () => {
@@ -67,21 +65,21 @@ function CreateEmployeeModal() {
       // Show confirmation if trying to close with unsaved changes
       setShowConfirmation(true);
     } else {
-      setOpen(newOpen);
-      if (!newOpen) {
-        // Reset mutation state when modal closes
-        mutation.reset();
-        setIsDirty(false);
-      }
+      onOpenChange(newOpen);
     }
   };
+
+  useEffect(() => {
+    if (!open) {
+      // Reset mutation state when modal closes
+      mutation.reset();
+      setIsDirty(false);
+    }
+  }, [open, mutation]);
 
   return (
     <>
       <Modal open={open} onOpenChange={handleOpenChange}>
-        <ModalTrigger asChild>
-          <Button variant="primary">Add Employee</Button>
-        </ModalTrigger>
         <ModalContent 
           className="sm:max-w-[500px]"
           onInteractOutside={(e) => e.preventDefault()}
@@ -93,17 +91,23 @@ function CreateEmployeeModal() {
           }}
         >
           <ModalHeader>
-            <ModalTitle>Create Employee</ModalTitle>
+            <ModalTitle>Edit Employee</ModalTitle>
             <ModalDescription>
-              Add a new employee to the system. All fields are required.
+              Update employee information. All fields are required.
             </ModalDescription>
           </ModalHeader>
 
           <EmployeeForm
+            defaultValues={{
+              full_name: employee.full_name,
+              job_title: employee.job_title,
+              country: employee.country,
+              salary: String(employee.salary), // Convert to string for validation
+            }}
             onSubmit={handleSubmit}
             onCancel={handleCancel}
             isSubmitting={mutation.isPending}
-            submitButtonText="Create"
+            submitButtonText="Update"
             onFormChange={(dirty) => setIsDirty(dirty)}
           />
         </ModalContent>
@@ -132,4 +136,4 @@ function CreateEmployeeModal() {
   );
 }
 
-export default CreateEmployeeModal;
+export default EditEmployeeModal;
