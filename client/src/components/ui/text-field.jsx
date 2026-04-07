@@ -13,6 +13,7 @@ const TextField = React.forwardRef(
       onBlur,
       clearable = false,
       onClear,
+      required = false,
       className = '',
       error,
       ...props
@@ -33,6 +34,7 @@ const TextField = React.forwardRef(
             className="block text-sm font-medium text-gray-700 mb-2"
           >
             {label}
+            {required && <span className="text-red-600 ml-1">*</span>}
           </label>
         )}
         <div className="relative">

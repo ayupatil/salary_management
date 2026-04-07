@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { BrowserRouter } from 'react-router-dom';
+import { ToastProvider } from '@/components/ui/toast';
 import EmployeeList from '../EmployeeList';
 import { employeeService } from '@/services/employeeService';
 
@@ -12,8 +14,8 @@ vi.mock('@/services/employeeService', () => ({
   },
 }));
 
-// Helper function to render with React Query
-const renderWithQuery = (component) => {
+// Helper function to render with React Query, Router, and Toast
+const renderWithProviders = (component) => {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
@@ -21,9 +23,13 @@ const renderWithQuery = (component) => {
   });
 
   return render(
-    <QueryClientProvider client={queryClient}>
-      {component}
-    </QueryClientProvider>
+    <BrowserRouter>
+      <QueryClientProvider client={queryClient}>
+        <ToastProvider>
+          {component}
+        </ToastProvider>
+      </QueryClientProvider>
+    </BrowserRouter>
   );
 };
 
@@ -37,7 +43,7 @@ describe('EmployeeList', () => {
       () => new Promise(() => {}) // Never resolves
     );
 
-    renderWithQuery(<EmployeeList />);
+    renderWithProviders(<EmployeeList />);
 
     expect(screen.getByText(/loading/i)).toBeInTheDocument();
   });
@@ -70,7 +76,7 @@ describe('EmployeeList', () => {
 
     employeeService.getEmployees.mockResolvedValue(mockData);
 
-    renderWithQuery(<EmployeeList />);
+    renderWithProviders(<EmployeeList />);
 
     await waitFor(() => {
       expect(screen.getByText('John Doe')).toBeInTheDocument();
@@ -99,7 +105,7 @@ describe('EmployeeList', () => {
 
     employeeService.getEmployees.mockResolvedValue(mockData);
 
-    renderWithQuery(<EmployeeList />);
+    renderWithProviders(<EmployeeList />);
 
     await waitFor(() => {
       expect(screen.getByRole('columnheader', { name: 'Full Name' })).toBeInTheDocument();
@@ -120,7 +126,7 @@ describe('EmployeeList', () => {
       new Error('Failed to fetch employees')
     );
 
-    renderWithQuery(<EmployeeList />);
+    renderWithProviders(<EmployeeList />);
 
     await waitFor(() => {
       expect(screen.getByText(/error/i)).toBeInTheDocument();
@@ -141,7 +147,7 @@ describe('EmployeeList', () => {
 
     employeeService.getEmployees.mockResolvedValue(mockData);
 
-    renderWithQuery(<EmployeeList />);
+    renderWithProviders(<EmployeeList />);
 
     await waitFor(() => {
       expect(screen.getByText(/no employees found/i)).toBeInTheDocument();
@@ -169,13 +175,14 @@ describe('EmployeeList', () => {
 
     employeeService.getEmployees.mockResolvedValue(mockData);
 
-    renderWithQuery(<EmployeeList />);
+    renderWithProviders(<EmployeeList />);
 
     await waitFor(() => {
-      // Check for the individual parts of the pagination text
+      // Check for the individual parts of the pagination text (use getAllByText since "employees" appears twice)
       expect(screen.getByText(/showing/i)).toBeInTheDocument();
       expect(screen.getByText('10,000')).toBeInTheDocument();
-      expect(screen.getByText(/employees/i)).toBeInTheDocument();
+      const employeesText = screen.getAllByText(/employees/i);
+      expect(employeesText.length).toBeGreaterThan(0);
     });
   });
 
@@ -200,7 +207,7 @@ describe('EmployeeList', () => {
 
     employeeService.getEmployees.mockResolvedValue(mockData);
 
-    renderWithQuery(<EmployeeList />);
+    renderWithProviders(<EmployeeList />);
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /previous/i })).toBeInTheDocument();
@@ -232,7 +239,7 @@ describe('EmployeeList', () => {
 
     employeeService.getEmployees.mockResolvedValue(mockData);
 
-    renderWithQuery(<EmployeeList />);
+    renderWithProviders(<EmployeeList />);
 
     await waitFor(() => {
       const previousButton = screen.getByRole('button', { name: /previous/i });
@@ -262,7 +269,7 @@ describe('EmployeeList', () => {
 
     employeeService.getEmployees.mockResolvedValue(mockData);
 
-    renderWithQuery(<EmployeeList />);
+    renderWithProviders(<EmployeeList />);
 
     await waitFor(() => {
       const nextButton = screen.getByRole('button', { name: /next/i });
@@ -311,7 +318,7 @@ describe('EmployeeList', () => {
 
     employeeService.getEmployees.mockResolvedValueOnce(mockDataPage1);
 
-    renderWithQuery(<EmployeeList />);
+    renderWithProviders(<EmployeeList />);
 
     await waitFor(() => {
       expect(screen.getByText('John Doe')).toBeInTheDocument();
@@ -349,7 +356,7 @@ describe('EmployeeList', () => {
 
     employeeService.getEmployees.mockResolvedValue(mockData);
 
-    renderWithQuery(<EmployeeList />);
+    renderWithProviders(<EmployeeList />);
 
     await waitFor(() => {
       expect(screen.getByLabelText(/country/i)).toBeInTheDocument();
@@ -377,7 +384,7 @@ describe('EmployeeList', () => {
 
     employeeService.getEmployees.mockResolvedValue(mockData);
 
-    renderWithQuery(<EmployeeList />);
+    renderWithProviders(<EmployeeList />);
 
     await waitFor(() => {
       expect(screen.getByLabelText(/job title/i)).toBeInTheDocument();
@@ -405,7 +412,7 @@ describe('EmployeeList', () => {
 
     employeeService.getEmployees.mockResolvedValue(mockData);
 
-    renderWithQuery(<EmployeeList />);
+    renderWithProviders(<EmployeeList />);
 
     await waitFor(() => {
       expect(screen.getByPlaceholderText(/search by name/i)).toBeInTheDocument();
@@ -452,7 +459,7 @@ describe('EmployeeList', () => {
 
     employeeService.getEmployees.mockResolvedValueOnce(mockDataInitial);
 
-    renderWithQuery(<EmployeeList />);
+    renderWithProviders(<EmployeeList />);
 
     await waitFor(() => {
       expect(screen.getByText('John Doe')).toBeInTheDocument();
@@ -492,7 +499,7 @@ describe('EmployeeList', () => {
 
     employeeService.getEmployees.mockResolvedValueOnce(mockDataInitial);
 
-    renderWithQuery(<EmployeeList />);
+    renderWithProviders(<EmployeeList />);
 
     await waitFor(() => {
       expect(screen.getByText('John Doe')).toBeInTheDocument();
@@ -530,7 +537,7 @@ describe('EmployeeList', () => {
 
     employeeService.getEmployees.mockResolvedValueOnce(mockDataInitial);
 
-    renderWithQuery(<EmployeeList />);
+    renderWithProviders(<EmployeeList />);
 
     await waitFor(() => {
       expect(screen.getByText('John Doe')).toBeInTheDocument();
@@ -571,13 +578,13 @@ describe('EmployeeList', () => {
 
     employeeService.getEmployees.mockResolvedValueOnce(mockDataPage2);
 
-    renderWithQuery(<EmployeeList />);
+    renderWithProviders(<EmployeeList />);
 
     await waitFor(() => {
       expect(screen.getByText('John Doe')).toBeInTheDocument();
     });
 
-    const countrySelect = screen.getByLabelText(/country/i);
+    const countrySelect = screen.getByRole('combobox', { name: /country/i });
     await user.selectOptions(countrySelect, 'USA');
 
     await waitFor(() => {

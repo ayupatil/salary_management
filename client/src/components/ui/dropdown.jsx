@@ -9,6 +9,7 @@ const Dropdown = React.forwardRef(
       onChange,
       options = [],
       placeholder,
+      required = false,
       className = '',
       error,
       ...props
@@ -23,6 +24,7 @@ const Dropdown = React.forwardRef(
             className="block text-sm font-medium text-gray-700 mb-2"
           >
             {label}
+            {required && <span className="text-red-600 ml-1">*</span>}
           </label>
         )}
         <select

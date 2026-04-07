@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { employeeService } from '@/services/employeeService';
 import {
   Table,
@@ -16,16 +17,32 @@ import { Dropdown } from '@/components/ui/dropdown';
 import { Button } from '@/components/ui/button';
 import { Pagination } from '@/components/ui/pagination';
 import { EmptyState } from '@/components/ui/empty-state';
+import CreateEmployeeModal from './CreateEmployeeModal';
 import { COUNTRY_OPTIONS, JOB_TITLE_OPTIONS, ITEMS_PER_PAGE } from '@/utils/constants';
 import { formatCurrency, formatNumber } from '@/utils/formatters';
 
 function EmployeeList() {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [country, setCountry] = useState('');
-  const [jobTitle, setJobTitle] = useState('');
-  const [searchInput, setSearchInput] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  // Initialize state from URL params
+  const [currentPage, setCurrentPage] = useState(
+    parseInt(searchParams.get('page')) || 1
+  );
+  const [country, setCountry] = useState(searchParams.get('country') || '');
+  const [jobTitle, setJobTitle] = useState(searchParams.get('jobTitle') || '');
+  const [searchInput, setSearchInput] = useState(searchParams.get('search') || '');
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
   const perPage = ITEMS_PER_PAGE;
+
+  // Sync URL params whenever filters change
+  useEffect(() => {
+    const params = {};
+    if (currentPage > 1) params.page = currentPage;
+    if (country) params.country = country;
+    if (jobTitle) params.jobTitle = jobTitle;
+    if (searchTerm) params.search = searchTerm;
+    setSearchParams(params, { replace: true });
+  }, [currentPage, country, jobTitle, searchTerm, setSearchParams]);
 
   // Reset to page 1 when filters change
   useEffect(() => {
@@ -77,6 +94,17 @@ function EmployeeList() {
 
   return (
     <div className="space-y-4">
+      {/* Header with Add Button */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Employees</h1>
+          <p className="text-sm text-gray-600 mt-1">
+            Manage your organization's employee data
+          </p>
+        </div>
+        <CreateEmployeeModal />
+      </div>
+
       {/* Filters and Search */}
       <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -112,11 +140,62 @@ function EmployeeList() {
           />
         </div>
 
-        {/* Reset Filters Button */}
+        {/* Active Filters & Reset Button */}
         {(country || jobTitle || searchTerm) && (
-          <div className="mt-4">
-            <Button variant="secondary" onClick={handleResetFilters}>
-              Reset Filters
+          <div className="mt-4 flex items-center gap-3 flex-wrap">
+            <span className="text-sm font-medium text-gray-700">Active Filters:</span>
+            
+            {/* Active Filter Badges */}
+            <div className="flex items-center gap-2 flex-wrap">
+              {searchTerm && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                  Search: "{searchTerm}"
+                  <button
+                    onClick={handleClearSearch}
+                    className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
+                    aria-label="Clear search"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </span>
+              )}
+              
+              {country && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 border border-green-200">
+                  Country: {country}
+                  <button
+                    onClick={() => setCountry('')}
+                    className="hover:bg-green-200 rounded-full p-0.5 transition-colors"
+                    aria-label="Clear country filter"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </span>
+              )}
+              
+              {jobTitle && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800 border border-purple-200">
+                  Job Title: {jobTitle}
+                  <button
+                    onClick={() => setJobTitle('')}
+                    className="hover:bg-purple-200 rounded-full p-0.5 transition-colors"
+                    aria-label="Clear job title filter"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </span>
+              )}
+            </div>
+
+            {/* Reset All Button */}
+            <Button variant="outline" onClick={handleResetFilters} className="ml-auto">
+              Reset All Filters
             </Button>
           </div>
         )}
