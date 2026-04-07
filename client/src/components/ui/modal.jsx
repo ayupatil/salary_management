@@ -1,27 +1,8 @@
 import * as React from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
+import { Icon } from '@iconify/react'
 
 import { cn } from "@/lib/utils"
-
-// Simple X icon component (replaces lucide-react dependency)
-const XIcon = ({ className, ...props }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-    {...props}
-  >
-    <path d="M18 6 6 18" />
-    <path d="m6 6 12 12" />
-  </svg>
-)
 
 const Modal = DialogPrimitive.Root
 
@@ -55,7 +36,7 @@ const ModalContent = React.forwardRef(({ className, children, ...props }, ref) =
       {children}
       <DialogPrimitive.Close
         className="absolute right-4 top-4 rounded-sm opacity-70 text-gray-500 hover:text-gray-700 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:pointer-events-none">
-        <XIcon className="h-4 w-4" />
+        <Icon icon="carbon:close" width="16" height="16" />
         <span className="sr-only">Close</span>
       </DialogPrimitive.Close>
     </DialogPrimitive.Content>

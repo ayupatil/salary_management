@@ -1,4 +1,5 @@
 import React from 'react';
+import { Icon } from '@iconify/react';
 
 const TextField = React.forwardRef(
   (
@@ -61,19 +62,7 @@ const TextField = React.forwardRef(
               className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
               aria-label="Clear input"
             >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
+              <Icon icon="carbon:close" width="20" height="20" />
             </button>
           )}
         </div>

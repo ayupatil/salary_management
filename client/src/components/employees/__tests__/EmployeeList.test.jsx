@@ -178,9 +178,11 @@ describe('EmployeeList', () => {
     renderWithProviders(<EmployeeList />);
 
     await waitFor(() => {
-      // Check for the individual parts of the pagination text (use getAllByText since "employees" appears twice)
-      expect(screen.getByText(/showing/i)).toBeInTheDocument();
-      expect(screen.getByText('10,000')).toBeInTheDocument();
+      // Check for the pagination text (appears twice - top and bottom)
+      const showingTexts = screen.getAllByText(/showing/i);
+      expect(showingTexts).toHaveLength(2); // Top and bottom pagination info
+      const totalCounts = screen.getAllByText('10,000');
+      expect(totalCounts.length).toBeGreaterThan(0); // Total count appears multiple times
       const employeesText = screen.getAllByText(/employees/i);
       expect(employeesText.length).toBeGreaterThan(0);
     });
@@ -210,11 +212,15 @@ describe('EmployeeList', () => {
     renderWithProviders(<EmployeeList />);
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /previous/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /next/i })).toBeInTheDocument();
-      expect(screen.getByText(/page/i)).toBeInTheDocument();
-      expect(screen.getByText('2')).toBeInTheDocument();
-      expect(screen.getByText('5')).toBeInTheDocument();
+      const previousButtons = screen.getAllByRole('button', { name: /previous/i });
+      const nextButtons = screen.getAllByRole('button', { name: /next/i });
+      expect(previousButtons).toHaveLength(2); // Top and bottom pagination
+      expect(nextButtons).toHaveLength(2); // Top and bottom pagination
+      const pageTexts = screen.getAllByText(/page/i);
+      expect(pageTexts).toHaveLength(2); // Top and bottom pagination controls show "Page X of Y"
+      // Check that page numbers are displayed (will appear twice - once in each pagination control)
+      expect(screen.getAllByText('2').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('5').length).toBeGreaterThan(0);
     });
   });
 
@@ -242,9 +248,16 @@ describe('EmployeeList', () => {
     renderWithProviders(<EmployeeList />);
 
     await waitFor(() => {
-      const previousButton = screen.getByRole('button', { name: /previous/i });
-      expect(previousButton).toBeDisabled();
-      expect(screen.getByRole('button', { name: /next/i })).not.toBeDisabled();
+      const previousButtons = screen.getAllByRole('button', { name: /previous/i });
+      const nextButtons = screen.getAllByRole('button', { name: /next/i });
+      // Both Previous buttons (top and bottom) should be disabled on first page
+      previousButtons.forEach(button => {
+        expect(button).toBeDisabled();
+      });
+      // Both Next buttons should be enabled
+      nextButtons.forEach(button => {
+        expect(button).not.toBeDisabled();
+      });
     });
   });
 
@@ -272,9 +285,16 @@ describe('EmployeeList', () => {
     renderWithProviders(<EmployeeList />);
 
     await waitFor(() => {
-      const nextButton = screen.getByRole('button', { name: /next/i });
-      expect(nextButton).toBeDisabled();
-      expect(screen.getByRole('button', { name: /previous/i })).not.toBeDisabled();
+      const nextButtons = screen.getAllByRole('button', { name: /next/i });
+      const previousButtons = screen.getAllByRole('button', { name: /previous/i });
+      // Both Next buttons (top and bottom) should be disabled on last page
+      nextButtons.forEach(button => {
+        expect(button).toBeDisabled();
+      });
+      // Both Previous buttons should be enabled
+      previousButtons.forEach(button => {
+        expect(button).not.toBeDisabled();
+      });
     });
   });
 
@@ -326,8 +346,8 @@ describe('EmployeeList', () => {
 
     employeeService.getEmployees.mockResolvedValueOnce(mockDataPage2);
 
-    const nextButton = screen.getByRole('button', { name: /next/i });
-    await user.click(nextButton);
+    const nextButtons = screen.getAllByRole('button', { name: /next/i });
+    await user.click(nextButtons[0]); // Click the first Next button (top pagination)
 
     await waitFor(() => {
       expect(screen.getByText('Jane Smith')).toBeInTheDocument();

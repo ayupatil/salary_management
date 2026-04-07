@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
+import { Icon } from '@iconify/react';
 import { employeeService } from '@/services/employeeService';
 import {
   Table,
@@ -114,6 +115,17 @@ function EmployeeList() {
 
   const employees = data?.employees || [];
   const pagination = data?.pagination || {};
+  
+  // Calculate employee range for current page
+  const startCount = ((pagination.current_page || 1) - 1) * (pagination.per_page || 50) + 1;
+  const endCount = startCount + employees.length - 1;
+  
+  // Pagination info display (reusable)
+  const paginationInfo = employees.length > 0 ? (
+    <div className="text-sm text-gray-600">
+      Showing <span className="font-semibold text-gray-900">{formatNumber(startCount)}{employees.length > 0 && ` - ${formatNumber(endCount)}`}</span> of <span className="font-semibold text-gray-900">{formatNumber(pagination.total_count || 0)}</span> employees
+    </div>
+  ) : null;
 
   return (
     <div className="space-y-4">
@@ -178,9 +190,7 @@ function EmployeeList() {
                     className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
                     aria-label="Clear search"
                   >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <Icon icon="carbon:close" width="14" height="14" />
                   </button>
                 </span>
               )}
@@ -193,9 +203,7 @@ function EmployeeList() {
                     className="hover:bg-green-200 rounded-full p-0.5 transition-colors"
                     aria-label="Clear country filter"
                   >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <Icon icon="carbon:close" width="14" height="14" />
                   </button>
                 </span>
               )}
@@ -208,9 +216,7 @@ function EmployeeList() {
                     className="hover:bg-purple-200 rounded-full p-0.5 transition-colors"
                     aria-label="Clear job title filter"
                   >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <Icon icon="carbon:close" width="14" height="14" />
                   </button>
                 </span>
               )}
@@ -248,12 +254,17 @@ function EmployeeList() {
       {/* Content - show when not loading and not error */}
       {!isLoading && !isError && (
         <>
-          {/* Pagination info */}
+          {/* Pagination info and top pagination controls */}
           {employees.length > 0 && (
-            <div className="flex items-center justify-end mr-4">
-              <div className="text-sm text-gray-600">
-                Showing <span className="font-semibold text-gray-900">{employees.length}</span> of <span className="font-semibold text-gray-900">{formatNumber(pagination.total_count || 0)}</span> employees
-              </div>
+            <div className="flex items-center justify-end gap-4 mt-10">
+              {paginationInfo}
+
+              {/* Top Pagination Controls */}
+              <Pagination
+                currentPage={pagination.current_page}
+                totalPages={pagination.total_pages}
+                onPageChange={setCurrentPage}
+              />
             </div>
           )}
 
@@ -318,33 +329,38 @@ function EmployeeList() {
             </div>
           )}
 
-          {/* Pagination Controls */}
+          {/* Pagination Controls - Bottom */}
           {employees.length > 0 && (
-            <Pagination
-              currentPage={pagination.current_page}
-              totalPages={pagination.total_pages}
-              onPageChange={setCurrentPage}
-            />
+              <div className="flex items-center justify-end gap-4">
+                {paginationInfo}
+
+                {/* Bottom Pagination Controls */}
+                <Pagination
+                    currentPage={pagination.current_page}
+                    totalPages={pagination.total_pages}
+                    onPageChange={setCurrentPage}
+                />
+              </div>
           )}
         </>
       )}
 
       {/* Edit Employee Modal */}
       {editingEmployee && (
-        <EditEmployeeModal
-          employee={editingEmployee}
-          open={isEditModalOpen}
-          onOpenChange={setIsEditModalOpen}
-        />
+          <EditEmployeeModal
+              employee={editingEmployee}
+              open={isEditModalOpen}
+              onOpenChange={setIsEditModalOpen}
+          />
       )}
 
       {/* Delete Confirmation Modal */}
       {deletingEmployee && (
-        <DeleteConfirmationModal
-          employee={deletingEmployee}
-          open={isDeleteModalOpen}
-          onOpenChange={setIsDeleteModalOpen}
-        />
+          <DeleteConfirmationModal
+              employee={deletingEmployee}
+              open={isDeleteModalOpen}
+              onOpenChange={setIsDeleteModalOpen}
+          />
       )}
     </div>
   );
