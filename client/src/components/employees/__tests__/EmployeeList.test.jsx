@@ -102,16 +102,16 @@ describe('EmployeeList', () => {
     renderWithQuery(<EmployeeList />);
 
     await waitFor(() => {
-      expect(screen.getByText('Full Name')).toBeInTheDocument();
-      expect(screen.getByText('Job Title')).toBeInTheDocument();
-      expect(screen.getByText('Country')).toBeInTheDocument();
-      expect(screen.getByText('Salary')).toBeInTheDocument();
-      expect(screen.getByText('Actions')).toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: 'Full Name' })).toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: 'Job Title' })).toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: 'Country' })).toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: 'Salary' })).toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: 'Actions' })).toBeInTheDocument();
       
-      expect(screen.getByText('John Doe')).toBeInTheDocument();
-      expect(screen.getByText('Engineer')).toBeInTheDocument();
-      expect(screen.getByText('India')).toBeInTheDocument();
-      expect(screen.getByText('$75,000')).toBeInTheDocument();
+      expect(screen.getByRole('cell', { name: 'John Doe' })).toBeInTheDocument();
+      expect(screen.getByRole('cell', { name: 'Engineer' })).toBeInTheDocument();
+      expect(screen.getByRole('cell', { name: 'India' })).toBeInTheDocument();
+      expect(screen.getByRole('cell', { name: '$75,000' })).toBeInTheDocument();
     });
   });
 
@@ -325,6 +325,265 @@ describe('EmployeeList', () => {
     await waitFor(() => {
       expect(screen.getByText('Jane Smith')).toBeInTheDocument();
       expect(employeeService.getEmployees).toHaveBeenCalledWith({ page: 2, perPage: 50 });
+    });
+  });
+
+  it('should render country filter dropdown', async () => {
+    const mockData = {
+      employees: [
+        {
+          id: 1,
+          full_name: 'John Doe',
+          job_title: 'Engineer',
+          country: 'India',
+          salary: 75000,
+        },
+      ],
+      pagination: {
+        current_page: 1,
+        total_pages: 1,
+        total_count: 1,
+        per_page: 50,
+      },
+    };
+
+    employeeService.getEmployees.mockResolvedValue(mockData);
+
+    renderWithQuery(<EmployeeList />);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/country/i)).toBeInTheDocument();
+    });
+  });
+
+  it('should render job title filter dropdown', async () => {
+    const mockData = {
+      employees: [
+        {
+          id: 1,
+          full_name: 'John Doe',
+          job_title: 'Engineer',
+          country: 'India',
+          salary: 75000,
+        },
+      ],
+      pagination: {
+        current_page: 1,
+        total_pages: 1,
+        total_count: 1,
+        per_page: 50,
+      },
+    };
+
+    employeeService.getEmployees.mockResolvedValue(mockData);
+
+    renderWithQuery(<EmployeeList />);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/job title/i)).toBeInTheDocument();
+    });
+  });
+
+  it('should render search input', async () => {
+    const mockData = {
+      employees: [
+        {
+          id: 1,
+          full_name: 'John Doe',
+          job_title: 'Engineer',
+          country: 'India',
+          salary: 75000,
+        },
+      ],
+      pagination: {
+        current_page: 1,
+        total_pages: 1,
+        total_count: 1,
+        per_page: 50,
+      },
+    };
+
+    employeeService.getEmployees.mockResolvedValue(mockData);
+
+    renderWithQuery(<EmployeeList />);
+
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText(/search by name/i)).toBeInTheDocument();
+    });
+  });
+
+  it('should filter by country when country is selected', async () => {
+    const user = userEvent.setup();
+    const mockDataInitial = {
+      employees: [
+        {
+          id: 1,
+          full_name: 'John Doe',
+          job_title: 'Engineer',
+          country: 'India',
+          salary: 75000,
+        },
+      ],
+      pagination: {
+        current_page: 1,
+        total_pages: 1,
+        total_count: 1,
+        per_page: 50,
+      },
+    };
+
+    const mockDataFiltered = {
+      employees: [
+        {
+          id: 2,
+          full_name: 'Jane Smith',
+          job_title: 'Manager',
+          country: 'USA',
+          salary: 95000,
+        },
+      ],
+      pagination: {
+        current_page: 1,
+        total_pages: 1,
+        total_count: 1,
+        per_page: 50,
+      },
+    };
+
+    employeeService.getEmployees.mockResolvedValueOnce(mockDataInitial);
+
+    renderWithQuery(<EmployeeList />);
+
+    await waitFor(() => {
+      expect(screen.getByText('John Doe')).toBeInTheDocument();
+    });
+
+    employeeService.getEmployees.mockResolvedValueOnce(mockDataFiltered);
+
+    const countrySelect = screen.getByLabelText(/country/i);
+    await user.selectOptions(countrySelect, 'USA');
+
+    await waitFor(() => {
+      expect(employeeService.getEmployees).toHaveBeenCalledWith(
+        expect.objectContaining({ country: 'USA' })
+      );
+    });
+  });
+
+  it('should filter by job title when job title is selected', async () => {
+    const user = userEvent.setup();
+    const mockDataInitial = {
+      employees: [
+        {
+          id: 1,
+          full_name: 'John Doe',
+          job_title: 'Engineer',
+          country: 'India',
+          salary: 75000,
+        },
+      ],
+      pagination: {
+        current_page: 1,
+        total_pages: 1,
+        total_count: 1,
+        per_page: 50,
+      },
+    };
+
+    employeeService.getEmployees.mockResolvedValueOnce(mockDataInitial);
+
+    renderWithQuery(<EmployeeList />);
+
+    await waitFor(() => {
+      expect(screen.getByText('John Doe')).toBeInTheDocument();
+    });
+
+    const jobTitleSelect = screen.getByLabelText(/job title/i);
+    await user.selectOptions(jobTitleSelect, 'Manager');
+
+    await waitFor(() => {
+      expect(employeeService.getEmployees).toHaveBeenCalledWith(
+        expect.objectContaining({ jobTitle: 'Manager' })
+      );
+    });
+  });
+
+  it('should search by name when typing in search input', async () => {
+    const user = userEvent.setup();
+    const mockDataInitial = {
+      employees: [
+        {
+          id: 1,
+          full_name: 'John Doe',
+          job_title: 'Engineer',
+          country: 'India',
+          salary: 75000,
+        },
+      ],
+      pagination: {
+        current_page: 1,
+        total_pages: 1,
+        total_count: 1,
+        per_page: 50,
+      },
+    };
+
+    employeeService.getEmployees.mockResolvedValueOnce(mockDataInitial);
+
+    renderWithQuery(<EmployeeList />);
+
+    await waitFor(() => {
+      expect(screen.getByText('John Doe')).toBeInTheDocument();
+    });
+
+    const searchInput = screen.getByPlaceholderText(/search by name/i);
+    await user.type(searchInput, 'Jane');
+    
+    // Trigger search by pressing Enter
+    await user.keyboard('{Enter}');
+
+    await waitFor(() => {
+      expect(employeeService.getEmployees).toHaveBeenCalledWith(
+        expect.objectContaining({ search: 'Jane' })
+      );
+    });
+  });
+
+  it('should reset to page 1 when filters change', async () => {
+    const user = userEvent.setup();
+    const mockDataPage2 = {
+      employees: [
+        {
+          id: 1,
+          full_name: 'John Doe',
+          job_title: 'Engineer',
+          country: 'India',
+          salary: 75000,
+        },
+      ],
+      pagination: {
+        current_page: 2,
+        total_pages: 5,
+        total_count: 250,
+        per_page: 50,
+      },
+    };
+
+    employeeService.getEmployees.mockResolvedValueOnce(mockDataPage2);
+
+    renderWithQuery(<EmployeeList />);
+
+    await waitFor(() => {
+      expect(screen.getByText('John Doe')).toBeInTheDocument();
+    });
+
+    const countrySelect = screen.getByLabelText(/country/i);
+    await user.selectOptions(countrySelect, 'USA');
+
+    await waitFor(() => {
+      expect(employeeService.getEmployees).toHaveBeenCalledWith(
+        expect.objectContaining({ page: 1, country: 'USA' })
+      );
     });
   });
 });
